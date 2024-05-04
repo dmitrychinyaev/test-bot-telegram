@@ -2,6 +2,7 @@ package com.codbud.Test.telegram.bot.bot;
 
 import com.codbud.Test.telegram.bot.config.TelegramBotConfiguration;
 import com.codbud.Test.telegram.bot.entity.TelegramUser;
+import com.codbud.Test.telegram.bot.utils.RegexUtils;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -9,10 +10,13 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.*;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import static com.codbud.Test.telegram.bot.utils.RegexUtils.isEmail;
 
 
 @Component
@@ -42,21 +46,29 @@ public class TelegramBot extends TelegramLongPollingBot {
                     .build();
 
             telegramUserSet.add(telegramUser);
+            try (FileOutputStream fos = new FileOutputStream("notes.txt");
+                 BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+                byte[] bytes = telegramUser.toString().getBytes();
+                fos.write(bytes);
+            }
 
             switch (message) {
                 case "/start" -> sendMessage(chatId, "Hello, " + username + " введите операцию");
-                case "/help" -> sendMessage(chatId, "Try to send something");
+                case "/help" -> sendMessage(chatId,  "Try to send something");
                 case "/info" -> sendMessage(chatId, "Information about bot");
                 case "/users" -> sendMessage(chatId, telegramUserSet.toString());
                 case "/sendToUsers" -> sendMessagesToUsers();
+                case "/showUsers" -> showUsers(chatId);
             }
 
-            if (Pattern.matches("[^@ \\t\\r\\n]+@[^@ \\t\\r\\n]+\\.[^@ \\t\\r\\n]+", message)){
+            if(isEmail(message)){
                 sendMessage(chatId, "Это какой e-mail");
             }
         }
 
     }
+
+
 
     @Override
     public String getBotUsername() {
@@ -85,5 +97,22 @@ public class TelegramBot extends TelegramLongPollingBot {
             sendMessage(telegramUser.getChatId(), "Это реклама");
         }
 
+    }
+
+    private void showUsers(long chatID) throws TelegramApiException {
+        StringBuilder stringBuilder = new StringBuilder();
+        try (FileInputStream fin = new FileInputStream("notes.txt");
+             BufferedInputStream bis = new BufferedInputStream(fin)) {
+
+            int i;
+            while ((i = fin.read()) != -1) {
+                stringBuilder.append((char)i);
+            }
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        sendMessage(chatID, stringBuilder.toString());
     }
 }

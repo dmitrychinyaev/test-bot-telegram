@@ -1,0 +1,1 @@
+TelegramUser(chatId=251878937, username=dmitrychinyaev, firstname=Дмитрий Чиняев, lastname=null)
