@@ -2,11 +2,12 @@ package com.codbud.Test.telegram.bot.bot;
 
 import com.codbud.Test.telegram.bot.config.TelegramBotConfiguration;
 import com.codbud.Test.telegram.bot.entity.TelegramUser;
-import com.codbud.Test.telegram.bot.utils.RegexUtils;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -14,7 +15,6 @@ import java.io.*;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import static com.codbud.Test.telegram.bot.utils.RegexUtils.isEmail;
 
@@ -45,11 +45,9 @@ public class TelegramBot extends TelegramLongPollingBot {
                     .lastname(update.getMessage().getChat().getLastName())
                     .build();
 
-            telegramUserSet.add(telegramUser);
-            try (FileOutputStream fos = new FileOutputStream("notes.txt");
-                 BufferedOutputStream bos = new BufferedOutputStream(fos)) {
-                byte[] bytes = telegramUser.toString().getBytes();
-                fos.write(bytes);
+            try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("notes.txt", true))) {
+                bufferedWriter.write(String.valueOf(telegramUser));
+                bufferedWriter.write('\n');
             }
 
             switch (message) {
@@ -59,6 +57,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 case "/users" -> sendMessage(chatId, telegramUserSet.toString());
                 case "/sendToUsers" -> sendMessagesToUsers();
                 case "/showUsers" -> showUsers(chatId);
+                case "/showPic" -> sendPhoto(chatId, "123.jpg");
             }
 
             if(isEmail(message)){
@@ -114,5 +113,12 @@ public class TelegramBot extends TelegramLongPollingBot {
             throw new RuntimeException(e);
         }
         sendMessage(chatID, stringBuilder.toString());
+    }
+
+    private void sendPhoto(long chatId, String filePath) throws TelegramApiException {
+        SendPhoto sendPhoto = new SendPhoto();
+        sendPhoto.setChatId(chatId);
+        sendPhoto.setPhoto(new InputFile(new File(filePath)));
+        execute(sendPhoto);
     }
 }

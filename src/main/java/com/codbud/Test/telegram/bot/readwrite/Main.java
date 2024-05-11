@@ -34,6 +34,32 @@ public class Main {
 //            fos.write(bytes);
 //        }
 
+//        try(FileWriter writer = new FileWriter("notes.txt", true)){
+//            //Запись всей строки
+//            writer.write(text);
+//            //Запись по символам
+//            writer.append('\n');
+//            writer.append('!');
+//            //До записываем и очищаем буфер
+//            writer.flush();
+//        }
 
+//        try(FileReader reader = new FileReader("notes.txt")){
+//            int c;
+//            while ((c = reader.read()) != -1){
+//                System.out.print((char) c);
+//            }
+//        }
+
+//        try(BufferedReader bufferedReader = new BufferedReader(new FileReader("notes.txt"))){
+//            String s;
+//            while ((s = bufferedReader.readLine()) != null){
+//                System.out.println(s);
+//            }
+//        }
+//        try(BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("notes.txt"))) {
+//            String text2 = "Hello World!";
+//            bufferedWriter.write(text2);
+//        }
     }
 }
