@@ -1,6 +1,8 @@
 package com.codbud.Test.telegram.bot.readwrite;
 
 import java.io.*;
+import java.util.Arrays;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -61,5 +63,15 @@ public class Main {
 //            String text2 = "Hello World!";
 //            bufferedWriter.write(text2);
 //        }
+
+        try (Scanner scanner = new Scanner(new File("test.csv"))) {
+            String[] parsedCSV = new String[6];
+            while (scanner.hasNextLine()) {
+                parsedCSV = scanner.nextLine().split(",");
+            }
+            System.out.println(Arrays.toString(parsedCSV));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

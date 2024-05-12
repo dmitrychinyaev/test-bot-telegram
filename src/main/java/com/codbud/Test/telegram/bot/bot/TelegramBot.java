@@ -9,12 +9,12 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.*;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 import static com.codbud.Test.telegram.bot.utils.RegexUtils.isEmail;
 
@@ -50,6 +50,13 @@ public class TelegramBot extends TelegramLongPollingBot {
                 bufferedWriter.write('\n');
             }
 
+            try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("test.csv", true))) {
+                bufferedWriter.write(String.valueOf(telegramUser.getChatId()));
+                bufferedWriter.write(',');
+            }
+
+
+
             switch (message) {
                 case "/start" -> sendMessage(chatId, "Hello, " + username + " введите операцию");
                 case "/help" -> sendMessage(chatId,  "Try to send something");
@@ -58,10 +65,27 @@ public class TelegramBot extends TelegramLongPollingBot {
                 case "/sendToUsers" -> sendMessagesToUsers();
                 case "/showUsers" -> showUsers(chatId);
                 case "/showPic" -> sendPhoto(chatId, "123.jpg");
+                case "/showBoard" -> getKeyboard(String.valueOf(chatId), "Это тестовая клавиатура");
             }
 
             if(isEmail(message)){
                 sendMessage(chatId, "Это какой e-mail");
+            }
+        }
+
+        if(update.hasCallbackQuery()){
+            String callback = update.getCallbackQuery().getData();
+            if(callback.equals("test1")) {
+                String listOfUsers;
+                try (Scanner scanner = new Scanner(new File("test.csv"))) {
+                    listOfUsers = scanner.nextLine();
+                }
+                sendMessage(update.getCallbackQuery().getMessage().getChatId(), listOfUsers);
+            } else {
+                SendMessage sendMessage = new SendMessage();
+                sendMessage.setChatId(update.getCallbackQuery().getMessage().getChatId());
+                sendMessage.setText(callback);
+                execute(sendMessage);
             }
         }
 
@@ -120,5 +144,49 @@ public class TelegramBot extends TelegramLongPollingBot {
         sendPhoto.setChatId(chatId);
         sendPhoto.setPhoto(new InputFile(new File(filePath)));
         execute(sendPhoto);
+    }
+
+    private void getKeyboard(String chatId, String text) throws TelegramApiException {
+        SendMessage message = new SendMessage();
+
+        message.setChatId(chatId);
+        //Текст над клавиатурой
+        message.setText(text);
+        //Объявляем клавиатуру
+        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
+        //Объявляем хранилище строк
+        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
+        //Заводим две строки
+        List<InlineKeyboardButton> rowInLine1 = new ArrayList<>();
+        List<InlineKeyboardButton> rowInLine2 = new ArrayList<>();
+        //Делаем кнопки
+        InlineKeyboardButton button = new InlineKeyboardButton();
+        button.setText("test1");
+        button.setCallbackData("test1");
+        rowInLine1.add(button);
+
+        InlineKeyboardButton button2 = new InlineKeyboardButton();
+        button2.setText("test2");
+        button2.setCallbackData("Это ответ от кнопки test2");
+        rowInLine1.add(button2);
+
+        InlineKeyboardButton button3 = new InlineKeyboardButton();
+        button3.setText("test3");
+        button3.setCallbackData("Это ответ от кнопки test3");
+        rowInLine2.add(button3);
+
+        InlineKeyboardButton button4 = new InlineKeyboardButton();
+        button4.setText("test4");
+        button4.setCallbackData("Это ответ от кнопки test4");
+        rowInLine2.add(button4);
+        //Добавляем строки в хранилище
+        rowsInLine.add(rowInLine1);
+        rowsInLine.add((rowInLine2));
+        //Добавляем хранилище в клавиатуру
+        markupInLine.setKeyboard(rowsInLine);
+        //Добавляем клавиатуру в message
+        message.setReplyMarkup(markupInLine);
+
+        execute(message);
     }
 }
